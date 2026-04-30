@@ -7,6 +7,7 @@ import { downloadExcel } from '@/lib/excel';
 interface Props {
   results: ResumeResult[];
   rubric: RubricCriteria[];
+  jobDescription: string;
   fileName: string;
   onReset: () => void;
 }
@@ -20,9 +21,10 @@ const REC_ORDER: Record<string, number> = {
   No: 3,
 };
 
-export default function Step4_Results({ results, rubric, fileName, onReset }: Props) {
+export default function Step4_Results({ results, rubric, jobDescription, fileName, onReset }: Props) {
   const [search, setSearch] = useState('');
   const [filterRec, setFilterRec] = useState<string>('all');
+  const [showSetup, setShowSetup] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('overallScore');
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -61,7 +63,7 @@ export default function Step4_Results({ results, rubric, fileName, onReset }: Pr
   async function handleDownload() {
     setDownloading(true);
     try {
-      await downloadExcel(filtered, rubric);
+      await downloadExcel(filtered, rubric, jobDescription);
     } finally {
       setDownloading(false);
     }
@@ -76,6 +78,41 @@ export default function Step4_Results({ results, rubric, fileName, onReset }: Pr
 
   return (
     <div className="space-y-6">
+      {/* Collapsible job setup */}
+      <div className="card p-4">
+        <button
+          className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
+          onClick={() => setShowSetup((v) => !v)}
+        >
+          <span>Job setup</span>
+          <span className="text-xs text-slate-400">{showSetup ? '▲ Hide' : '▼ Show'}</span>
+        </button>
+        {showSetup && (
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="mb-1 text-xs font-semibold uppercase text-slate-500">Job Description</p>
+              <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-xs text-slate-700 leading-relaxed">
+                {jobDescription}
+              </pre>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Scoring Rubric</p>
+              <div className="space-y-1.5">
+                {rubric.map((c) => (
+                  <div key={c.id} className="flex items-start gap-2 text-xs">
+                    <span className="w-8 shrink-0 text-right font-bold text-slate-400">
+                      {c.weight}%
+                    </span>
+                    <span className="font-semibold text-slate-700">{c.name}</span>
+                    <span className="text-slate-400">— {c.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Summary bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(Object.entries(counts) as [string, number][]).map(([rec, count]) => (

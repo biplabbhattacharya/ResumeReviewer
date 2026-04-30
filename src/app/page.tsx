@@ -103,6 +103,7 @@ export default function Home() {
           <Step4_Results
             results={results}
             rubric={rubric}
+            jobDescription={jobDescription}
             fileName={fileName}
             onReset={reset}
           />
@@ -110,7 +111,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-20 border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        Resume Reviewer · Built with Next.js + Anthropic Claude · No resume data is stored or
+        Resume Reviewer · Built with Next.js + Anthropic Claude + Biplab Bhattacharya· No resume data is stored or
         transmitted beyond processing
       </footer>
     </div>

@@ -3,6 +3,7 @@ import { ResumeResult, RubricCriteria } from './types';
 export async function downloadExcel(
   results: ResumeResult[],
   rubric: RubricCriteria[],
+  jobDescription: string,
 ): Promise<void> {
   const XLSX = await import('xlsx');
 
@@ -42,6 +43,15 @@ export async function downloadExcel(
   ws['!cols'] = colWidths;
 
   XLSX.utils.book_append_sheet(wb, ws, 'Resume Scores');
+
+  // Job Description sheet — one line per row for readability
+  const jdSheet = XLSX.utils.aoa_to_sheet([
+    ['Job Description'],
+    [],
+    ...jobDescription.split('\n').map((line) => [line]),
+  ]);
+  jdSheet['!cols'] = [{ wch: 100 }];
+  XLSX.utils.book_append_sheet(wb, jdSheet, 'Job Description');
 
   // Rubric reference sheet
   const rubricRows = rubric.map((c) => ({
