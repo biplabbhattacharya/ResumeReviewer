@@ -90,8 +90,10 @@ For each resume below, extract and score the candidate. Return a JSON array wher
   "summary": "2-3 sentence overall evaluation."
 }
 
-recommendation must be one of: "Strong Yes", "Yes", "Maybe", "No"
-overallScore = weighted average of rubricScores using the rubric weights.
+rubricScores: each criterion scored 0–10 (integers only).
+overallScore (0–100): compute as  Σ(rubricScore × weight) / 10  where weight is the percentage
+  number (e.g. 30, not 0.30). Example: score 8 on a 30% criterion → contributes 8×30/10 = 24.
+recommendation: based on overallScore — "Strong Yes" ≥ 80, "Yes" ≥ 65, "Maybe" ≥ 45, "No" < 45.
 
 RESUMES TO SCORE:
 ${resumeBlock}`,
@@ -105,7 +107,18 @@ ${resumeBlock}`,
   if (!match) throw new Error('Could not parse scored resumes from Claude response');
 
   const parsed = JSON.parse(match[0]) as Omit<ResumeResult, 'id'>[];
-  return parsed.map((r, i) => ({ ...r, id: startIndex + i + 1 }));
+  return parsed.map((r, i) => ({
+    ...r,
+    id: startIndex + i + 1,
+    // Clamp to valid ranges in case the model drifts from the prompt instructions
+    rubricScores: Object.fromEntries(
+      Object.entries(r.rubricScores ?? {}).map(([k, v]) => [
+        k,
+        Math.round(Math.min(10, Math.max(0, Number(v)))),
+      ]),
+    ),
+    overallScore: Math.round(Math.min(100, Math.max(0, Number(r.overallScore)))),
+  }));
 }
 
 export async function POST(request: NextRequest) {
